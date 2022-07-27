@@ -27,7 +27,18 @@ oc get pods -n spring-petclinic
 oc get route -n spring-petclinic
 ```
 
-
+解决Login with OpenShift后在ArgoCD上没有权限操作的问题：
+1. 创建`cluster-admin-group`组，将指定用户添加到该组
+2. 将`cluster-admin`权限授权给`cluster-admin-group`组
+```bash
+oc adm policy add-cluster-role-to-group cluster-admin cluster-admin-group
+```
+3. 在`openshift-gitops`项目，打开Installed Operators，打开OpenShift GitOps operator
+4. 打开ArgoCD，打开`openshift-gitops`, 编辑YAML，在`rbac.policy`下添加：
+```yaml
+g, cluster-admin-group, role:admin
+```
+5. 在ArgoCD上Log out再重新登录。
 
 
 ## Deploy App with additional ArgoCD
