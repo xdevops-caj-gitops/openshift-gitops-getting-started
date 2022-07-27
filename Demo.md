@@ -38,7 +38,8 @@ oc adm policy add-cluster-role-to-group cluster-admin cluster-admin-group
 ```yaml
 g, cluster-admin-group, role:admin
 ```
-5. 在ArgoCD上Log out再重新登录。
+5. 检查`argocd-rbac-cm` ConfigMap，确保`policy.csv`的值符合预期
+6. 在ArgoCD上Log out再重新登录。
 
 
 ## Deploy App with additional ArgoCD
@@ -64,6 +65,7 @@ oc adm policy add-role-to-group admin myargocd-admin-group -n myargocd
 ```yaml
 g, myargocd-admin-group, role:admin
 ```
+5. 检查`argocd-rbac-cm` ConfigMap，确保`policy.csv`的值符合预期
 
 
 Run below clean up scripts firsly.
