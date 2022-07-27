@@ -7,7 +7,7 @@
 oc project openshift-gitops
 
 # create cluster-configs application
-oc create -f argo/cluster.yaml
+oc create -f argo/cluster.yaml -n openshift-gitops
 
 # verify
 oc get application -n openshift-gitops
@@ -27,34 +27,11 @@ oc get pods -n spring-petclinic
 oc get route -n spring-petclinic
 ```
 
-## Deploy App with additional ArgoCD (用YAML创建ArgoCD)
-
-> 用这种方式创建的ArgoCD不能Login with OpenShift
-
-Create additional ArgoCD instance:
-```bash
-oc new-project myargocd
-oc create -f argo/argocd.yaml
-
-# get argocd admin password
-oc get secret myargocd-cluster -n myargocd -ojsonpath='{.data.admin\.password}' | base64 -d
-```
-
-Run below clean up scripts firsly.
-
-其余步骤参见下面。
 
 
-## Deploy App with additional ArgoCD （界面方式创建ArgoCD）
 
-> 问题
-> 用Login with OpenShift方式在ArgoCD界面上看不到应用
-> 用ArgoCD自带的admin登录可以看到应用
+## Deploy App with additional ArgoCD
 
-```
-# get argocd admin password
-oc get secret myargocd-cluster -n myargocd -ojsonpath='{.data.admin\.password}' | base64 -d
-```
 
 创建额外的ArgoCD实例：
 1. 创建`myarogcd`项目
@@ -63,6 +40,19 @@ oc get secret myargocd-cluster -n myargocd -ojsonpath='{.data.admin\.password}' 
 4. 在Networking / route中打开新的ArgoCD的地址
 5. Login with OpenShift
 
+此时用户还没有ArgoCD的admin权限，所以会看不到application。
+
+下面给用户分配ArgoCD的admin权限:
+1. 创建`myargocd-admin-group`组，将指定用户添加到该组
+2. 将`myargocd`项目下的`admin`权限授权给`myargocd-admin-group`组
+```bash
+oc adm policy add-role-to-group admin myargocd-admin-group -n myargocd
+```
+3. 在`myarogcd`项目，打开Installed Operators，打开OpenShift GitOps operator
+4. 打开ArgoCD，打开`myargocd`, 编辑YAML，在`rbac.policy`下添加：
+```yaml
+g, myargocd-admin-group, role:admin
+```
 
 
 Run below clean up scripts firsly.
@@ -77,11 +67,11 @@ oc create -f argo/cluster.yaml -n openshift-gitops
 oc get application -n openshift-gitops
 oc describe ns spring-petclinic
 
+# fix not managed error, need cluster admin right
+oc label namespace spring-petclinic argocd.argoproj.io/managed-by=myargocd
+
 # create app-spring-petclinic application
 oc create -f argo/app.yaml -n myargocd
-
-# fix not managed error?
-oc label namespace spring-petclinic argocd.argoproj.io/managed-by=myargocd
 
 # verify
 oc get application -n myargocd
