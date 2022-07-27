@@ -29,8 +29,7 @@ oc get route -n spring-petclinic
 
 ## Deploy App with additional ArgoCD (有问题)
 
-> Error:
-> Cluster level Namespace "spring-petclinic" can not be managed when in namespaced mode
+> 用这种方式创建的ArgoCD不能Login with OpenShift
 
 Create additional ArgoCD instance:
 ```bash
@@ -43,39 +42,19 @@ oc get secret myargocd-cluster -n myargocd -ojsonpath='{.data.admin\.password}' 
 
 Run below clean up scripts firsly.
 
-Deploy app with addtitional argocd instance:
-```bash
-# use myargocd project
-oc project myargocd
+其余步骤参见下面。
 
-# create cluster-configs application
-oc create -f argo/cluster.yaml
-
-# verify
-oc get application -n myargocd
-oc describe ns spring-petclinic
-
-# create app-spring-petclinic application
-oc create -f argo/app.yaml
-
-oc label namespace spring-petclinic argocd.argoproj.io/managed-by=myargocd
-
-# verify
-oc get application -n myargocd
-oc get pods -n spring-petclinic
-
-# access the application in browser
-# tips: http not https
-oc get route -n spring-petclinic
-```
 
 ## Deploy App with additional ArgoCD （有问题）
 
 > 问题
 > 用Login with OpenShift方式在ArgoCD界面上看不到应用
+> 用ArgoCD自带的admin登录可以看到应用
 
-> Error:
-> Cluster level Namespace "spring-petclinic" can not be managed when in namespaced mode
+```
+# get argocd admin password
+oc get secret myargocd-cluster -n myargocd -ojsonpath='{.data.admin\.password}' | base64 -d
+```
 
 创建额外的ArgoCD实例：
 1. 创建`myarogcd`项目
@@ -84,23 +63,24 @@ oc get route -n spring-petclinic
 4. 在Networking / route中打开新的ArgoCD的地址
 5. Login with OpenShift
 
+
+
 Run below clean up scripts firsly.
 
 Deploy app with addtitional argocd instance:
 ```bash
-# use myargocd project
-oc project myargocd
-
 # create cluster-configs application
-oc create -f argo/cluster.yaml
+# cluster-scoped resources need be created under openshift-gitops
+oc create -f argo/cluster.yaml -n openshift-gitops
 
 # verify
-oc get application -n myargocd
+oc get application -n openshift-gitops
 oc describe ns spring-petclinic
 
 # create app-spring-petclinic application
-oc create -f argo/app.yaml
+oc create -f argo/app.yaml -n myargocd
 
+# fix not managed error?
 oc label namespace spring-petclinic argocd.argoproj.io/managed-by=myargocd
 
 # verify
@@ -116,9 +96,6 @@ oc get route -n spring-petclinic
 ```bash
 oc delete application cluster-configs -n openshift-gitops
 oc delete application app-spring-petclinic -n openshift-gitops
-oc delete project spring-petclinic
-
-oc delete application cluster-configs -n myargocd
 oc delete application app-spring-petclinic -n myargocd
 oc delete project spring-petclinic
 ```
