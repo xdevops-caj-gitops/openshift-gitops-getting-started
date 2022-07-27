@@ -27,7 +27,7 @@ oc get pods -n spring-petclinic
 oc get route -n spring-petclinic
 ```
 
-## Deploy App with additional ArgoCD (有问题)
+## Deploy App with additional ArgoCD (用YAML创建ArgoCD)
 
 > 用这种方式创建的ArgoCD不能Login with OpenShift
 
@@ -45,7 +45,7 @@ Run below clean up scripts firsly.
 其余步骤参见下面。
 
 
-## Deploy App with additional ArgoCD （有问题）
+## Deploy App with additional ArgoCD （界面方式创建ArgoCD）
 
 > 问题
 > 用Login with OpenShift方式在ArgoCD界面上看不到应用
